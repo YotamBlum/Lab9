@@ -35,7 +35,7 @@
       <option>*</option>
       <option>/</option>
     </select>
-    <input type="number" name="second-num" id="second-num" />
+    <!--<input type="number" name="second-num" id="second-num" />-->
     <button id="calculate">Calculate</button>
     <br />
     <output></output>
@@ -55,18 +55,82 @@
     <button>Trigger a Global Error</button>
   </section>
 
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
   <script>
+
+    window.TrackJS && TrackJS.install({ 
+      token: "5380533b2ea3468583ab323702c97580"
+      // for more configuration options, see https://docs.trackjs.com
+    });
+
+    class MissingDOMNodeError extends Error {
+      constructor(message) {
+        super(message); // (1)
+        this.name = "MissingDOMNodeError"; // (2)
+      }
+    }
+
+    let Operation = {};
+
     let calculateBtn = document.querySelector('#calculate');
+
     calculateBtn.addEventListener('click', () => {
       let output = document.querySelector('output');
       let firstNum = document.querySelector('#first-num').value;
-      let secondNum = document.querySelector('#second-num').value;
+      try {
+        let secondNum = document.querySelector('#second-num').value;
+      } catch (err) {
+        TrackJS.track('Caught exception: MissingDOMNode');
+        throw new MissingDOMNodeError("Couldn't find DOM node!");
+      } finally {
+        TrackJS.track('Reached finally block.');
+      }
       let operator = document.querySelector('#operator').value;
       output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      Operation = {
+        output: output,
+        firstNum: firstNum,
+        secondNum: secondNum,
+        operator: operator
+      };
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
-    // TODO - Make buttons functional
+    
+    errorBtns[0].addEventListener("click", () => {
+        console.log("Hello world!");
+    });
+    errorBtns[1].addEventListener("click", () => {
+        console.error("You weren't supposed to click that.");
+    });
+    errorBtns[2].addEventListener("click", () => {
+        console.dir(Operation);
+    });
+    errorBtns[3].addEventListener("click", () => {
+        console.dirxml(calculateBtn);
+    });
+    errorBtns[4].addEventListener("click", () => {
+        console.group("Console Group");
+    });
+    errorBtns[5].addEventListener("click", () => {
+        console.groupEnd("Console Group");
+    });
+    errorBtns[6].addEventListener("click", () => {
+        console.table([Operation]);
+    });
+    errorBtns[7].addEventListener("click", () => {
+        console.time("Console Timer");
+    });
+    errorBtns[8].addEventListener("click", () => {
+        console.timeEnd("Console Timer");
+    });
+    errorBtns[9].addEventListener("click", () => {
+        console.trace(document.querySelectorAll('#error-btns > button'));
+    });
+
+    window.onerror = function(msg, url, linenumber) {
+      console.log('Error message: '+msg+'\nURL: '+url+'\nLine Number: '+linenumber);
+    }
   </script>
 </body>
 </html>
